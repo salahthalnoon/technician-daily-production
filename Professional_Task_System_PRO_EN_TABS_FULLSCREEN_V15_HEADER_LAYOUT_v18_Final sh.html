@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Professional Employee Task System (Pro • Tabs)</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+@font-face{
+    font-family:"Saudia Corporate";
+    src: local("Saudia Corporate"), local("Saudia"), local("SAUDIA"), local("SaudiaCorp");
+    font-weight:400; font-style:normal; font-display:swap;
+  }
+  @font-face{
+    font-family:"Saudia Corporate";
+    src: local("Saudia Corporate Bold"), local("Saudia Bold"), local("Saudia-Bold");
+    font-weight:700; font-style:normal; font-display:swap;
+  }
+
+:root{
+      --bg:#f1f5f9;
+      --card:#FFFFFF;
+      --ink:#0C0C0C;
+      --muted:#64748b;
+      --primary:#006937;
+      --primary2:#6ABF4B;
+      --border:#e2e8f0;
+      --shadow:0 10px 26px rgba(2,6,23,.08);
+      --radius:16px;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:"Saudia Corporate","Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+    header{background:var(--primary);color:white;padding:16px 18px;flex:0 0 auto;position:sticky;top:0;z-index:50}
+    header h1{margin:0;font-size:18px}
+    header p{margin:6px 0 0;color:#cbd5e1;font-size:13px}
+    .container{max-width:none;width:100%;margin:0;padding:18px;flex:1 1 auto;min-height:0}
+
+    /* Tabs */
+    .tabsbar{
+      display:flex;gap:8px;flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .tabbtn{
+      padding:10px 12px;border-radius:999px;
+      border:1px solid rgba(226,232,240,.25);
+      background:rgba(255,255,255,.08);
+      color:#e2e8f0;
+      cursor:pointer;
+      font-weight:800;font-size:13px;
+    }
+    .tabbtn.active{
+      background:#fff;color:var(--ink);
+      border-color:#fff;
+    }
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+
+    .subtabbtn{
+      padding:10px 12px;border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+      cursor:pointer;
+      font-weight:800;font-size:13px;
+    }
+    .subtabbtn.active{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:#fff;
+    }
+
+    .card h2{margin:0 0 10px;font-size:16px}
+    .sub{color:var(--muted);font-size:12px;margin:-4px 0 10px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 560px){.row{grid-template-columns:1fr}}
+    label{display:block;color:var(--muted);font-size:12px;margin:8px 0 4px}
+    select,input,textarea{
+      width:100%;
+      padding:10px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      outline:none;
+      font-size:14px;
+    }
+    .btnbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+    button{
+      padding:10px 14px;
+      border:none;border-radius:12px;
+      cursor:pointer;font-weight:800;
+      background:var(--primary);color:white;
+    }
+    button.secondary{background:var(--primary2)}
+    button.ghost{background:#e2e8f0;color:var(--ink)}
+    button.danger{background:var(--bad)}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media (max-width: 980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    .kpi{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
+    .kpi .k{font-size:12px;color:var(--muted)}
+    .kpi .v{font-size:20px;font-weight:900;margin-top:4px}
+    .kpi .hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900}
+    .p-green{background:#dcfce7;color:var(--ok)}
+    .p-orange{background:#ffedd5;color:#c2410c}
+    .p-red{background:#fee2e2;color:var(--bad)}
+
+    .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .filters > div{min-width:210px;flex:1}
+    .tablewrap{border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:none;background:#fff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:1px solid var(--border);padding:8px;text-align:center;white-space:nowrap}
+    th{background:var(--primary);color:#fff;position:sticky;top:0;z-index:2}
+    td.left{text-align:left;white-space:normal;min-width:260px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.5}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+    .toast{position:fixed;bottom:18px;left:18px;background:#0b1220;color:#e2e8f0;padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);transition:.25s;z-index:20}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .actions{display:flex;gap:8px;justify-content:center}
+    .iconbtn{padding:8px 10px;border-radius:10px;font-weight:900}
+    .iconbtn.edit{background:#0ea5e9}
+    .iconbtn.del{background:#ef4444}
+    .iconbtn.save{background:#16a34a}
+    .iconbtn.cancel{background:#94a3b8}
+    .mini{font-size:11px;color:var(--muted)}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px;color:var(--muted)}
+
+    /* Sections */
+    .section{display:none;height:100%;min-height:0;overflow:auto}
+    .section.active{display:block;height:100%}
+    .grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;min-height:0}
+    @media (max-width: 980px){.grid2{grid-template-columns:1fr}}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
+    @media (max-width: 980px){.split{grid-template-columns:1fr}}
+  </style>
+</head>
+
+<body>
+
+<header style="position:relative;background:var(--primary);padding:18px 20px;">
+  <img alt="Saudia Technic Logo" src="data:image/png;base64,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" 
+       style="position:absolute;left:20px;top:50%;transform:translateY(-50%);width:300px;height:auto;object-fit:contain" />
+  <h1 style="margin:0;font-size:36px;font-weight:800;text-align:center;color:white;">
+    Technician Daily Production
+  </h1>
+
+  <div class="tabsbar" role="tablist" aria-label="Main tabs" style="margin-top:15px;justify-content:center;">
+    <button class="tabbtn active" data-tab="entry">Data Entry</button>
+    <button class="tabbtn" data-tab="kpi">KPI Tables</button>
+    <button class="tabbtn" data-tab="table">Table</button>
+    <button class="tabbtn" data-tab="files">Files</button>
+    <button class="tabbtn" data-tab="dashboard">Dashboard</button>
+  </div>
+</header>
+
+
+<div class="container">
+
+  <!-- TAB 1: DATA ENTRY (includes table) -->
+  <section id="tab-entry" class="section active" aria-label="Data Entry">
+    <div class="grid2">
+      <div class="card">
+        <h2>Data Entry</h2>
+        <div class="sub">Employee / Status are fixed lists from Excel. Enter = Add. Ctrl+Enter = Add fast.</div>
+
+        <div class="row">
+          <div>
+            <label>Employee</label>
+            <select id="employeeSelect"></select>
+          </div>
+          <div>
+            <label>Shop</label>
+            <select id="shopSelect"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Status</label>
+            <select id="commentSelect"></select>
+          </div>
+        </div>
+
+        <div id="statusDetailWrap" style="display:none;margin-top:6px">
+          <label id="statusDetailLabel">Status comment (Others / Effect)</label>
+          <input id="statusDetailInput" placeholder="Type the details here..." />
+          
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input type="date" id="dateInput" />
+          </div>
+          <div>
+            <label>Task</label>
+            <input id="taskInput" placeholder="Type the task and press Enter" />
+            <div class="mini">Tip: focus stays on Task after add.</div>
+          </div>
+        </div>
+
+        <div class="btnbar">
+          <button id="addBtn" type="button">Add Task</button>
+          <button class="ghost" id="clearBtn" type="button">Clear fields</button>
+          <span class="tag" id="saveState">Saved</span>
+        </div>
+
+        <div class="muted" style="margin-top:10px">
+          Data is stored locally on this device (LocalStorage). Use the Files tab to Backup/Import/Export.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Quick View (Filters)</h2>
+        <div class="sub">These filters affect Dashboard, KPI Tables, and Table.</div>
+
+        <div class="filters">
+          <div>
+            <label>Employee filter</label>
+            <select id="filterEmployee"></select>
+          </div>
+          <div>
+            <label>Shop filter</label>
+            <select id="filterShop"></select>
+          </div>
+        </div>
+
+        <div class="filters" style="margin-top:8px">
+          <div>
+            <label>Year</label>
+            <select id="filterYear"></select>
+          </div>
+          <div>
+            <label>Quick range</label>
+            <select id="quickRange">
+              <option value="all">All</option>
+              <option value="today">Today</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filters" style="margin-top:8px">
+          <div>
+            <label>From date</label>
+            <input type="date" id="fromDate" />
+          </div>
+          <div>
+            <label>To date</label>
+            <input type="date" id="toDate" />
+          </div>
+        </div>
+
+        <div class="filters" style="margin-top:8px">
+          <div>
+            <label>Search</label>
+            <input id="searchInput" placeholder="Search employee / task / shop / status / detail ..." />
+          </div>
+          <div>
+            <label>Sort</label>
+            <select id="sortBy">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="date_newest">Date newest</option>
+              <option value="date_oldest">Date oldest</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:10px">
+          You can also open the dedicated Table tab for full-screen table view.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>All Entries (Persistent Table)</h2>
+      <div class="sub">Always saved. Edit/Delete any row.</div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Employee</th>
+              <th>Shop</th>
+              <th>Task</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBodyEntry"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: DASHBOARD -->
+  <section id="tab-dashboard" class="section" aria-label="Dashboard">
+    <div class="card">
+      <h2>Dashboard</h2>
+      <div class="sub">KPIs + Numbers tables (no charts). Filters come from the Data Entry filters.</div>
+
+      <div class="kpis">
+        <!-- Updated KPI cards: display counts for each engineering status and a KPI% based on Released / Total -->
+        <div class="kpi"><div class="k">Total tasks</div><div class="v" id="kTotal">0</div><div class="hint" id="kHint">Filtered view</div></div>
+        <div class="kpi"><div class="k">ENG</div><div class="v" id="kENG">0</div><div class="hint">Status = ENG</div></div>
+        <div class="kpi"><div class="k">Others</div><div class="v" id="kOthers">0</div><div class="hint">Status = Others</div></div>
+        <div class="kpi"><div class="k">RELEASED</div><div class="v" id="kRELEASED">0</div><div class="hint">Status = RELEASED</div></div>
+        <div class="kpi"><div class="k">SCRPPED</div><div class="v" id="kSCRPPED">0</div><div class="hint">Status = SCRPPED</div></div>
+        <div class="kpi"><div class="k">WAITNG PARTS</div><div class="v" id="kWAITNGPARTS">0</div><div class="hint">Status = WAITNG PARTS</div></div>
+        <div class="kpi"><div class="k">KPI%</div><div class="v" id="kKpi">0%</div><div class="hint" id="kKpiHint">Released / Total</div></div>
+      </div>
+
+      <div class="hr"></div>
+<div class="hr"></div>
+
+      <div class="sub" style="margin:0 0 10px">Breakdowns (Counts by category • stacked by Status)</div>
+
+      <div class="row">
+        <div class="card" style="box-shadow:none;border-radius:12px;border:1px solid var(--border);padding:10px">
+          <div class="sub" style="margin:0 0 6px">Tasks by Shop</div>
+<div class="hr"></div>
+          <div class="sub" style="margin:0 0 6px">By Shop (numbers)</div>
+          <div class="tablewrap" style="max-height:220px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Shop</th>
+                  <th>Total</th>
+                  <th>ENG</th>
+                  <th>Others</th>
+                  <th>RELEASED</th>
+                  <th>SCRPPED</th>
+                  <th>WAITNG PARTS</th>
+                </tr>
+              </thead>
+              <tbody id="byShopNumbers"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="box-shadow:none;border-radius:12px;border:1px solid var(--border);padding:10px">
+          <div class="sub" style="margin:0 0 6px">Tasks by Status</div>
+<div class="hr"></div>
+          <div class="sub" style="margin:0 0 6px">By Status (numbers)</div>
+          <div class="tablewrap" style="max-height:220px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>ENG</th>
+                  <th>Others</th>
+                  <th>RELEASED</th>
+                  <th>SCRPPED</th>
+                  <th>WAITNG PARTS</th>
+                </tr>
+              </thead>
+              <tbody id="byStatusNumbers"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;box-shadow:none;border-radius:12px;border:1px solid var(--border);padding:10px">
+        <div class="sub" style="margin:0 0 6px">Tasks by Employee</div>
+<div class="hr"></div>
+        <div class="sub" style="margin:0 0 6px">By Employee (numbers)</div>
+        <div class="tablewrap" style="max-height:260px">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Total</th>
+                <th>ENG</th>
+                <th>Others</th>
+                <th>RELEASED</th>
+                <th>SCRPPED</th>
+                <th>WAITNG PARTS</th>
+              </tr>
+            </thead>
+            <tbody id="byEmployeeNumbers"></tbody>
+          </table>
+        </div>
+      </div>
+
+<div class="muted" style="margin-top:10px">
+        KPI colors: <span class="pill p-green">≥85%</span> <span class="pill p-orange">60–84%</span> <span class="pill p-red">&lt;60%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: KPI TABLES -->
+  <section id="tab-kpi" class="section" aria-label="KPI Tables">
+    <div class="card">
+      <h2>KPI Tables</h2>
+      <div class="sub">Two views: Employee KPI and Monthly Totals (12 months). Filters apply.</div>
+
+      <div class="tabsbar" style="margin-top:8px" role="tablist" aria-label="KPI sub tabs">
+        <button class="subtabbtn active" data-subtab="empkpi" role="tab" aria-selected="true">Employee KPI Table</button>
+        <button class="subtabbtn" data-subtab="monthly" role="tab" aria-selected="false">Monthly Table (12 months)</button>
+      </div>
+    </div>
+
+    <section id="subtab-empkpi" class="section active" aria-label="Employee KPI Table">
+      <div class="card" style="margin-top:16px">
+        <h2>Employee KPI Table</h2>
+        <div class="sub">Totals + status counts + KPI% (Released / Total) within the selected filters.</div>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Total</th>
+                <th>ENG</th>
+                <th>Others</th>
+                <th>RELEASED</th>
+                <th>SCRPPED</th>
+                <th>WAITNG PARTS</th>
+                <th>KPI%</th>
+              </tr>
+            </thead>
+            <tbody id="kpiBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="subtab-monthly" class="section" aria-label="Monthly Totals (12 months)">
+      <div class="card" style="margin-top:16px">
+        <h2>Monthly Totals (12 months)</h2>
+        <div class="sub">Total tasks per employee per month (Jan–Dec) in the selected year. Filters apply.</div>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+                <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                <th>Year Total</th>
+              </tr>
+            </thead>
+            <tbody id="monthlyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+  <!-- TAB 4: TABLE ONLY -->
+  <section id="tab-table" class="section" aria-label="Table">
+    <div class="card">
+      <h2>Table (Full Screen)</h2>
+      <div class="sub">Same persistent data. Uses the same filters set in the Data Entry tab.</div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Employee</th>
+              <th>Shop</th>
+              <th>Task</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBodyTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: FILES -->
+  <section id="tab-files" class="section" aria-label="Files">
+    <div class="card">
+      <h2>Files</h2>
+      <div class="sub">Backup / Import / Export / Delete local data.</div>
+
+      <div class="btnbar">
+        <button class="ghost" id="importBtn" type="button">Import Excel (.xlsx)</button>
+        <input id="importFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" />
+        <button class="ghost" id="exportBtn" type="button">Export Excel (.xlsx)</button>
+        <button class="danger" id="deleteAllBtn" type="button">Delete all local data</button>
+      </div>
+
+      <div class="muted" style="margin-top:10px">
+        Backup JSON saves everything. Import Excel (.xlsx) appends tasks to the current data.
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+/* ========= Fixed lists (from Excel) ========= */
+const EMPLOYEES = ["30000448-Abdalelah Alsufyani", "13003155-Abdulrahman A. Bukhari", "30001369-Abdulrahman Alzahrano", "13006834-Ahmad M. Alghamdi", "30006622-Asim Alahmadi", "13003156-Braikan Alharbi", "30006331-Khalid Hobani", "3007072-Mansour  M. Khan", "13002849-Mohammad A. Alobthani", "3007060-Mohammad Z Alherabi", "30000307Rommel  G. Camua", "13004686-Sultan  F. Alaslani", "13002946-Waleed M. Tayeb"];
+const SHOPS     = ["110-Electrical", "120-Instruments", "121-Oxygen"];
+const STATUS    = ["Not Started", "In Progress", "Complete"];
+const COMMENTS  = ["ENG", "Others", "RELEASED", "SCRPPED", "WAITNG PARTS"];
+
+// The system originally distinguished between "Complete", "In Progress" and "Not Started" when
+// calculating KPIs. In this implementation we drop those legacy states and treat the list of
+// engineering statuses (stored in `COMMENTS`) as the authoritative status list. To simplify
+// referencing we create a clone of `COMMENTS` called `STATUS_LIST`. All KPI calculations and
+// breakdown tables now aggregate counts based on this list instead of the legacy states.
+const STATUS_LIST = COMMENTS.slice();
+
+/* ========= Local storage ========= */
+const LS_TASKS_KEY = "proTasks_pro_tabs_v1";
+let tasks = JSON.parse(localStorage.getItem(LS_TASKS_KEY) || "[]");
+
+// ---- Migration (older versions used `comment` as the visible Status) ----
+tasks = (tasks || []).map(t => {
+  const obj = (t && typeof t === "object") ? t : {};
+  // If status is missing or was forced to a default, but comment exists, use comment as status.
+  if((!obj.status || obj.status === "Not Started") && obj.comment && safeText(obj.comment)) {
+    obj.status = safeText(obj.comment);
+  }
+  // Keep `statusDetail` if present; otherwise empty.
+  obj.statusDetail = safeText(obj.statusDetail || obj.detail || "");
+  // Drop legacy field to avoid confusion.
+  if("comment" in obj) delete obj.comment;
+  if("detail" in obj) delete obj.detail;
+  return obj;
+});
+
+/* ========= Helpers ========= */
+function nowIso() { return new Date().toISOString(); }
+function safeText(x) { return (x ?? "").toString().trim(); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1300);
+}
+
+function setSaveState(state) {
+  const el = document.getElementById("saveState");
+  el.textContent = state;
+  if(state === "Saved") {
+    el.style.borderColor = "#bbf7d0";
+    el.style.color = "#166534";
+  } else {
+    el.style.borderColor = "#fde68a";
+    el.style.color = "#92400e";
+  }
+}
+
+function setOptions(selectEl, items, includeAllLabel) {
+  selectEl.innerHTML = "";
+  if(includeAllLabel) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = includeAllLabel;
+    selectEl.appendChild(opt);
+  }
+  items.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    selectEl.appendChild(opt);
+  });
+}
+
+// Return a colored pill element based on the engineering status. RELEASED is treated as
+// complete (green), ENG indicates active work (orange) and waiting parts or scrapped
+// statuses are highlighted in red. Others are shown in orange as informational.
+function statusPill(status) {
+  const s = safeText(status);
+  if(s === "RELEASED") return '<span class="pill p-green">RELEASED</span>';
+  if(s === "ENG") return '<span class="pill p-orange">ENG</span>';
+  if(s === "WAITNG PARTS" || s === "SCRPPED") return `<span class="pill p-red">${s}</span>`;
+  if(s === "Others") return '<span class="pill p-orange">Others</span>';
+  // Fallback: show the status in a red pill
+  return `<span class="pill p-red">${s || 'Unknown'}</span>`;
+}
+
+function needsStatusDetail(status) {
+  const s = safeText(status).toLowerCase();
+  return (s === "others" || s === "other" || s === "effect" || s === "أثر" || s === "اخرى" || s === "أخرى");
+}
+
+function statusDisplayHtml(t) {
+  const s = safeText(t.status);
+  const d = safeText(t.statusDetail);
+  if(!d) return safeText(s);
+  // show details without affecting KPI grouping
+  return `${safeText(s)}<div class="mini">${safeText(d)}</div>`;
+}
+
+function toggleEntryStatusDetail(selectedStatus) {
+  const wrap = document.getElementById("statusDetailWrap");
+  const inp  = document.getElementById("statusDetailInput");
+  const label= document.getElementById("statusDetailLabel");
+  if(!wrap || !inp) return;
+
+  if(needsStatusDetail(selectedStatus)) {
+    wrap.style.display = "block";
+    label.textContent = (safeText(selectedStatus).toLowerCase() === "effect" || safeText(selectedStatus) === "أثر")
+      ? "Effect comment (write the effect) / أثر"
+      : "Comment";
+    inp.focus();
+  } else {
+    wrap.style.display = "none";
+    inp.value = "";
+  }
+}
+
+function onEditStatusChange(id, newStatus) {
+  const wrap = document.getElementById(`editDetailWrap_${id}`);
+  if(!wrap) return;
+  wrap.style.display = needsStatusDetail(newStatus) ? "block" : "none";
+  if(!needsStatusDetail(newStatus)) {
+    const input = wrap.querySelector('input[data-edit="statusDetail"]');
+    if(input) input.value = "";
+  }
+}
+
+function withinDateRange(taskDate, from, to) {
+  if(!taskDate) return false;
+  const t = taskDate; // YYYY-MM-DD
+  if(from && t < from) return false;
+  if(to && t > to) return false;
+  return true;
+}
+
+function monthIndex(dateStr) {
+  const d = new Date(dateStr);
+  const m = d.getMonth();
+  return isNaN(m) ? null : m;
+}
+
+function yearFromDate(dateStr) {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  return isNaN(y) ? null : y;
+}
+
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return {year: d.getUTCFullYear(), week: weekNo};
+}
+
+function downloadText(filename, text) {
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+function toCsvRow(arr) {
+  return arr.map(v => '"' + String(v ?? "").replaceAll('"','""') + '"').join(",");
+}
+
+/* ========= Persistence ========= */
+function persist() {
+  setSaveState("Saving...");
+  localStorage.setItem(LS_TASKS_KEY, JSON.stringify(tasks));
+  setSaveState("Saved");
+}
+
+/* ========= Tabs ========= */
+function showTab(key) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("tab-" + key).classList.add("active");
+
+  document.querySelectorAll(".tabbtn").forEach(b => {
+    const isActive = b.dataset.tab === key;
+    b.classList.toggle("active", isActive);
+    b.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  // render charts when opening dashboard (Chart.js likes visible canvases)
+  
+  if(key === "kpi") {
+    // Ensure KPI sub-tab stays consistent
+    const active = document.querySelector("#tab-kpi .subtabbtn.active")?.dataset?.subtab || "empkpi";
+    showKpiSubTab(active);
+  }
+if(key === "dashboard") {
+    setTimeout(render, 0);
+  }
+}
+
+
+/* ========= KPI Sub Tabs ========= */
+function showKpiSubTab(key) {
+  // Only inside KPI tab
+  const a = document.getElementById("subtab-empkpi");
+  const b = document.getElementById("subtab-monthly");
+  if(!a || !b) return;
+
+  a.classList.toggle("active", key === "empkpi");
+  b.classList.toggle("active", key === "monthly");
+
+  // Update subtab button styles (inside KPI tab only)
+  const kpiTab = document.getElementById("tab-kpi");
+  if(!kpiTab) return;
+  kpiTab.querySelectorAll('[data-subtab]').forEach(btn => {
+    const isActive = btn.dataset.subtab === key;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+}
+
+/* ========= Filtering ========= */
+function getActiveYear() {
+  const y = safeText(document.getElementById("filterYear").value);
+  return y ? parseInt(y,10) : null;
+}
+
+function applyQuickRange(list) {
+  const mode = safeText(document.getElementById("quickRange").value);
+  if(mode === "all") return list;
+
+  const today = new Date();
+  const todayStr = today.toISOString();
+
+  if(mode === "today") {
+    return list.filter(t => safeText(t.date) === todayStr);
+  }
+  if(mode === "week") {
+    const w = isoWeek(today);
+    return list.filter(t => {
+      const dt = new Date(safeText(t.date));
+      if(isNaN(dt)) return false;
+      const ww = isoWeek(dt);
+      return ww.year === w.year && ww.week === w.week;
+    });
+  }
+  if(mode === "month") {
+    const y = today.getFullYear(), m = today.getMonth();
+    return list.filter(t => {
+      const dt = new Date(safeText(t.date));
+      if(isNaN(dt)) return false;
+      return dt.getFullYear() === y && dt.getMonth() === m;
+    });
+  }
+  return list;
+}
+
+function getFilteredTasks() {
+  const fEmp  = safeText(document.getElementById("filterEmployee").value);
+  const fShop = safeText(document.getElementById("filterShop").value);
+  const q     = safeText(document.getElementById("searchInput").value).toLowerCase();
+  const from  = safeText(document.getElementById("fromDate").value);
+  const to    = safeText(document.getElementById("toDate").value);
+  const activeYear = getActiveYear();
+
+  let list = tasks.filter(t => {
+    if(fEmp && t.employee !== fEmp) return false;
+    if(fShop && t.shop !== fShop) return false;
+    if(activeYear) {
+      const yy = yearFromDate(t.date);
+      if(yy !== activeYear) return false;
+    }
+    if(from || to) {
+      if(!withinDateRange(safeText(t.date), from, to)) return false;
+    }
+    if(q) {
+      const hay = [t.timestamp,t.employee,t.shop,t.task,t.status,t.statusDetail,t.date]
+        .map(x => safeText(x).toLowerCase()).join(" | ");
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list = applyQuickRange(list);
+  return list;
+}
+
+/* ========= Aggregations ========= */
+// Compute overall counts for the dashboard. Instead of grouping tasks by "Complete/In Progress/Not Started"
+// we now bucket tasks by the engineering status list defined in `STATUS_LIST`. A KPI is derived
+// from the proportion of tasks marked as "RELEASED" to the total number of filtered tasks. This
+// provides a quick indicator of how many tasks have reached the released state.
+function computeOverall(list) {
+  const total = list.length;
+  const counts = {};
+  STATUS_LIST.forEach(s => counts[s] = 0);
+  list.forEach(t => {
+    const s = safeText(t.status);
+    if(counts.hasOwnProperty(s)) counts[s]++;
+  });
+  // Define KPI as the percentage of released tasks (considered completed) relative to the total.
+  const released = counts["RELEASED"] || 0;
+  const kpi = total ? Math.round((released / total) * 100) : 0;
+  return { total, counts, kpi };
+}
+
+function buildEmployeeStats(list) {
+  // Build an object keyed by employee with totals and per-status counts. Each employee
+  // starts with zero counts for every status in STATUS_LIST and an array of monthly totals.
+  const stats = {};
+  EMPLOYEES.forEach(e => {
+    const counts = {};
+    STATUS_LIST.forEach(s => counts[s] = 0);
+    stats[e] = {
+      total: 0,
+      counts: counts,
+      months: Array(12).fill(0)
+    };
+  });
+  list.forEach(t => {
+    const emp = t.employee;
+    if(!stats[emp]) return;
+    stats[emp].total++;
+    const s = safeText(t.status);
+    if(stats[emp].counts.hasOwnProperty(s)) stats[emp].counts[s]++;
+    const mi = monthIndex(t.date);
+    if(mi !== null) stats[emp].months[mi]++;
+  });
+  return stats;
+}
+
+function buildTotalMonthly(list) {
+  const months = Array(12).fill(0);
+  list.forEach(t => {
+    const mi = monthIndex(t.date);
+    if(mi !== null) months[mi]++;
+  });
+  return months;
+}
+
+/* ========= Charts ========= */
+
+
+function buildStackedCounts(list, field) {
+  // Group the list by the given field (e.g. shop, status, employee). For each group
+  // accumulate counts for every status in STATUS_LIST. The result is an object
+  // containing an array of labels and an object mapping each status to an array of counts.
+  const map = new Map(); // key -> counts object for each status
+  list.forEach(t => {
+    const key = safeText(t[field]) || "(Blank)";
+    if(!map.has(key)) {
+      const counts = {};
+      STATUS_LIST.forEach(s => counts[s] = 0);
+      map.set(key, counts);
+    }
+    const counts = map.get(key);
+    const s = safeText(t.status);
+    if(counts.hasOwnProperty(s)) counts[s]++;
+  });
+  // Convert the map into an array and sort by total descending
+  const entries = Array.from(map.entries()).map(([k, counts]) => {
+    const total = STATUS_LIST.reduce((sum, s) => sum + counts[s], 0);
+    return { k, counts, total };
+  });
+  entries.sort((a, b) => b.total - a.total);
+  const labels = entries.map(e => e.k);
+  const countsByStatus = {};
+  STATUS_LIST.forEach(s => {
+    countsByStatus[s] = entries.map(e => e.counts[s] || 0);
+  });
+  return {
+    labels,
+    countsByStatus
+  };
+}
+
+/* ========= Tables ========= */
+function kpiClass(kpi) {
+  if(kpi >= 85) return "p-green";
+  if(kpi >= 60) return "p-orange";
+  return "p-red";
+}
+
+function renderEmployeeKpiTable(empStats) {
+  const body = document.getElementById("kpiBody");
+  if(!body) return;
+  body.innerHTML = "";
+  Object.keys(empStats).forEach(emp => {
+    const s = empStats[emp];
+    const counts = s.counts || {};
+    // KPI is defined as Released / Total (percentage)
+    const released = counts["RELEASED"] || 0;
+    const kpi = s.total ? Math.round((released / s.total) * 100) : 0;
+    const statusCells = STATUS_LIST.map(st => `<td>${counts[st] || 0}</td>`).join("");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${emp}</td>
+      <td>${s.total}</td>
+      ${statusCells}
+      <td><span class="pill ${kpiClass(kpi)}">${kpi}%</span></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function renderMonthlyTotalsTable(empStats) {
+  const body = document.getElementById("monthlyBody");
+  if(!body) return;
+  body.innerHTML = "";
+  Object.keys(empStats).forEach(emp => {
+    const s = empStats[emp];
+    const yearTotal = s.months.reduce((a,b)=>a+b,0);
+    const tds = s.months.map(v => `<td>${v}</td>`).join("");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${emp}</td>${tds}<td><b>${yearTotal}</b></td>`;
+    body.appendChild(tr);
+  });
+}
+
+function sortList(list) {
+  const mode = safeText(document.getElementById("sortBy").value);
+  const copy = list.slice();
+  if(mode === "oldest") {
+    copy.sort((a,b)=> safeText(a.timestamp).localeCompare(safeText(b.timestamp)));
+  } else if(mode === "date_newest") {
+    copy.sort((a,b)=> safeText(b.date).localeCompare(safeText(a.date)) || safeText(b.timestamp).localeCompare(safeText(a.timestamp)));
+  } else if(mode === "date_oldest") {
+    copy.sort((a,b)=> safeText(a.date).localeCompare(safeText(b.date)) || safeText(a.timestamp).localeCompare(safeText(b.timestamp)));
+  } else {
+    copy.sort((a,b)=> safeText(b.timestamp).localeCompare(safeText(a.timestamp)));
+  }
+  return copy;
+}
+
+function renderEntriesTableInto(tbodyId, list, allowEdit) {
+  if(allowEdit === undefined) allowEdit = true;
+  const body = document.getElementById(tbodyId);
+  if(!body) return;
+  body.innerHTML = "";
+
+  const sorted = sortList(list);
+  sorted.forEach((t, idx) => {
+    const tr = document.createElement("tr");
+    const isEditing = (allowEdit === true) && (t.__editing === true);
+
+    if(!isEditing) {
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${safeText(t.timestamp).replace("T"," ").replace("Z","")}</td>
+        <td>${safeText(t.employee)}</td>
+        <td>${safeText(t.shop)}</td>
+        <td class="left">${safeText(t.task)}</td>
+         <td>${statusDisplayHtml(t)}</td>
+        <td>${safeText(t.date)}</td>
+        <td>
+          <div class="actions">
+            ${allowEdit ? `<button class="iconbtn edit" type="button" onclick="startEdit('${t.id}')">Edit</button>` : ``}
+            <button class="iconbtn del" type="button" onclick="deleteRow('${t.id}')">Delete</button>
+          </div>
+        </td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${safeText(t.timestamp).replace("T"," ").replace("Z","")}</td>
+        <td>
+          <select data-edit="employee" data-id="${t.id}">${EMPLOYEES.map(e=>`<option ${e===t.employee?'selected':''}>${e}</option>`).join('')}</select>
+        </td>
+        <td>
+          <select data-edit="shop" data-id="${t.id}">${SHOPS.map(s=>`<option ${s===t.shop?'selected':''}>${s}</option>`).join('')}</select>
+        </td>
+        <td class="left">
+          <input data-edit="task" data-id="${t.id}" value="${String(t.task||"").replaceAll('"','&quot;')}" />
+        </td>
+<td>
+          <select data-edit="status" data-id="${t.id}" onchange="onEditStatusChange('${t.id}', this.value)">
+            ${COMMENTS.map(c=>`<option ${c===t.status?'selected':''}>${c}</option>`).join('')}
+          </select>
+          <div style="margin-top:6px;display:${needsStatusDetail(t.status) ? 'block' : 'none'}" id="editDetailWrap_${t.id}">
+            <input data-edit="statusDetail" data-id="${t.id}" value="${String(t.statusDetail||"").replaceAll('"','&quot;')}" placeholder="Type details..." />
+          </div>
+        </td>
+        <td>
+          <input type="date" data-edit="date" data-id="${t.id}" value="${safeText(t.date)}" />
+        </td>
+        <td>
+          <div class="actions">
+            <button class="iconbtn save" type="button" onclick="saveEdit('${t.id}')">Save</button>
+            <button class="iconbtn cancel" type="button" onclick="cancelEdit('${t.id}')">Cancel</button>
+          </div>
+        </td>
+      `;
+    }
+    body.appendChild(tr);
+  });
+}
+
+/* ========= Actions ========= */
+function uuid() { return "t_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
+
+function addTask() {
+  const employee = safeText(document.getElementById("employeeSelect").value);
+  const shop     = safeText(document.getElementById("shopSelect").value);
+  const status   = safeText(document.getElementById("commentSelect").value);
+  const statusDetail = safeText(document.getElementById("statusDetailInput").value);
+  const date     = safeText(document.getElementById("dateInput").value);
+  const taskTxt  = safeText(document.getElementById("taskInput").value);
+
+    if(!employee || !shop || !status || !date || !taskTxt) {
+    alert("Please fill in all fields.");
+    return;
+  }
+  if(needsStatusDetail(status) && !statusDetail) {
+    alert("Please write the Status details.");
+    return;
+  }
+
+  const dup = tasks.some(t => t.employee===employee && t.date===date && safeText(t.task).toLowerCase()===taskTxt.toLowerCase());
+  if(dup) {
+    if(!confirm("A similar task already exists for this employee and date. Add anyway?")) return;
+  }
+
+  tasks.push({
+    id: uuid(),
+    timestamp: nowIso(),
+    employee, shop,
+    task: taskTxt,
+    status,
+    statusDetail,
+    date
+  });
+
+  persist();
+  render();
+  toast("Saved");
+
+  document.getElementById("taskInput").value = "";
+  document.getElementById("taskInput").focus();
+}
+
+function clearFields() {
+  document.getElementById("taskInput").value = "";
+  document.getElementById("statusDetailInput").value = "";
+  document.getElementById("statusDetailWrap").style.display = "none";
+  document.getElementById("dateInput").value = new Date().toISOString().slice(0,10);
+  document.getElementById("taskInput").focus();
+}
+
+function deleteRow(id) {
+  if(!confirm("Delete this row?")) return;
+  tasks = tasks.filter(t => t.id !== id);
+  persist();
+  render();
+  toast("Deleted");
+}
+
+function startEdit(id) {
+  tasks.forEach(t => t.__editing = (t.id === id));
+  render();
+}
+
+function cancelEdit(id) {
+  tasks.forEach(t => t.__editing = false);
+  render();
+}
+
+function saveEdit(id) {
+  const edits = document.querySelectorAll(`[data-id="${id}"][data-edit]`);
+  const obj = {};
+  edits.forEach(el => { obj[el.dataset.edit] = el.value; });
+
+  tasks = tasks.map(t => {
+    if(t.id !== id) return t;
+    return {
+      ...t,
+      employee: safeText(obj.employee),
+      shop: safeText(obj.shop),
+      task: safeText(obj.task),
+      status: safeText(obj.status),
+      statusDetail: safeText(obj.statusDetail),
+      date: safeText(obj.date),
+      __editing: false
+    };
+  });
+
+  persist();
+  render();
+  toast("Updated");
+}
+
+function exportExcel() {
+  if(typeof XLSX === "undefined") {
+    alert("Excel export library (XLSX) failed to load.");
+    return;
+  }
+    const header = ["ID","Timestamp","Employee","Shop","Task","Status","Status Detail","Date"];
+    const rows = tasks.map(t => [t.id,t.timestamp,t.employee,t.shop,t.task,t.status,t.statusDetail,t.date]);
+  const aoa = [header, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+  const ts = new Date().toISOString().slice(0,19).replaceAll(":","-");
+  XLSX.writeFile(wb, `tasks_export_${ts}.xlsx`);
+}
+
+/* backupJson removed: replaced by Excel export */
+
+function importExcel(file) {
+  if(typeof XLSX === "undefined") {
+    alert("Excel import library (XLSX) failed to load.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: "array" });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      // Read as arrays (first row header)
+      const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
+      if(!aoa || aoa.length < 2) {
+        alert("No rows found in the Excel file.");
+        return;
+      }
+
+      const header = aoa[0].map(h => String(h).trim().toLowerCase());
+      const idx = (key) => header.indexOf(key);
+
+      const hasId = idx("id") !== -1;
+      const i_id = idx("id");
+      const i_ts = idx("timestamp");
+      const i_emp = idx("employee");
+      const i_shop = idx("shop");
+      const i_task = idx("task");
+      const i_status = idx("status");
+      const i_statusDetail = idx("status detail");
+      const i_date = idx("date");
+
+      // Fallback to expected fixed column order if headers not present
+      const fallback = !([i_ts,i_emp,i_shop,i_task,i_status,i_date].every(v => v !== -1));
+
+      const imported = [];
+      for(let r=1; r<aoa.length; r++) {
+        const row = aoa[r];
+        if(!row || row.length === 0) continue;
+
+        const obj = fallback ? {
+          id: row[0] ? String(row[0]).trim() : uuid(),
+          timestamp: row[1] ? String(row[1]).trim() : nowIso(),
+          employee: row[2] ? String(row[2]).trim() : "",
+          shop: row[3] ? String(row[3]).trim() : "",
+          task: row[4] ? String(row[4]).trim() : "",
+          status: row[5] ? String(row[5]).trim() : "",
+          statusDetail: row[6] ? String(row[6]).trim() : "",
+          date: row[7] ? String(row[7]).trim() : ""
+        } : {
+          id: hasId && row[i_id] ? String(row[i_id]).trim() : uuid(),
+          timestamp: row[i_ts] ? String(row[i_ts]).trim() : nowIso(),
+          employee: row[i_emp] ? String(row[i_emp]).trim() : "",
+          shop: row[i_shop] ? String(row[i_shop]).trim() : "",
+          task: row[i_task] ? String(row[i_task]).trim() : "",
+          status: row[i_status] ? String(row[i_status]).trim() : "",
+          statusDetail: (i_statusDetail !== -1 && row[i_statusDetail]) ? String(row[i_statusDetail]).trim() : "",
+          date: row[i_date] ? String(row[i_date]).trim() : ""
+        };
+
+        // Minimal validation
+        if(!obj.employee || !obj.shop || !obj.task || !obj.status || !obj.date) continue;
+
+        // Normalize to known lists when possible (keep original if not found)
+        if(!EMPLOYEES.includes(obj.employee)) { /* keep */ }
+        if(!SHOPS.includes(obj.shop)) { /* keep */ }
+        if(!COMMENTS.includes(obj.status)) { /* keep */ }
+
+        imported.push(obj);
+      }
+
+      if(imported.length === 0) {
+        alert("No valid rows imported. Make sure required columns exist and are filled.");
+        return;
+      }
+
+      // Append (do not overwrite)
+      tasks = tasks.concat(imported);
+      persist();
+      render();
+      toast("Imported");
+    } catch(err) {
+      alert("Import failed: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ========= Year options ========= */
+function initYearOptions() {
+  const years = new Set();
+  tasks.forEach(t => {
+    const y = yearFromDate(t.date);
+    if(y) years.add(y);
+  });
+  years.add(new Date().getFullYear());
+  const sorted = Array.from(years).sort((a,b)=>b-a);
+
+  const sel = document.getElementById("filterYear");
+  sel.innerHTML = "";
+  const allOpt = document.createElement("option");
+  allOpt.value = "";
+  allOpt.textContent = "All years";
+  sel.appendChild(allOpt);
+
+  sorted.forEach(y => {
+    const opt = document.createElement("option");
+    opt.value = String(y);
+    opt.textContent = String(y);
+    sel.appendChild(opt);
+  });
+}
+
+
+/* ========= Breakdown tables (numbers only) ========= */
+// Render a breakdown table where each row corresponds to a label (e.g. shop, status, employee) and
+// each column shows counts for the statuses in STATUS_LIST. The first two columns are the label
+// and the total of all counts. The remaining columns are dynamically generated based on
+// STATUS_LIST.
+function renderBreakdownNumbers(tbodyId, dataObj) {
+  const body = document.getElementById(tbodyId);
+  if(!body) return;
+  body.innerHTML = "";
+  for(let i = 0; i < dataObj.labels.length; i++) {
+    // Sum counts across all statuses for the current row
+    let total = 0;
+    const cells = STATUS_LIST.map(s => {
+      const arr = (dataObj.countsByStatus && dataObj.countsByStatus[s]) || [];
+      const val = arr[i] || 0;
+      total += val;
+      return `<td>${val}</td>`;
+    }).join("");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="left">${dataObj.labels[i]}</td><td><b>${total}</b></td>${cells}`;
+    body.appendChild(tr);
+  }
+}
+
+/* ========= KPI rendering ========= */
+function renderKpis(overall) {
+  // Update the total count
+  const totalEl = document.getElementById("kTotal");
+  if(totalEl) totalEl.textContent = overall.total;
+  // Update individual status counts
+  STATUS_LIST.forEach(s => {
+    const id = "k" + s.replace(/\s+/g, "").replace(/[^A-Za-z0-9]/g, "");
+    const el = document.getElementById(id);
+    if(el) el.textContent = (overall.counts && overall.counts[s]) ? overall.counts[s] : 0;
+  });
+  // Update KPI percentage (Released / Total)
+  const kpiEl = document.getElementById("kKpi");
+  if(kpiEl) kpiEl.textContent = overall.kpi + '%';
+  const hint = document.getElementById("kKpiHint");
+  if(hint) {
+    if(overall.kpi >= 85) hint.innerHTML = '<span class="pill p-green">Excellent</span>';
+    else if(overall.kpi >= 60) hint.innerHTML = '<span class="pill p-orange">Good</span>';
+    else hint.innerHTML = '<span class="pill p-red">Needs improvement</span>';
+  }
+}
+
+/* ========= Main render ========= */
+function render() {
+  initYearOptions();
+
+  const filtered = getFilteredTasks();
+  const overall = computeOverall(filtered);
+  const empStats = buildEmployeeStats(filtered);
+
+  // Dashboard
+  renderKpis(overall);
+// Breakdowns (stacked by status)
+  const shopData = buildStackedCounts(filtered, "shop");
+    const statusData = buildStackedCounts(filtered, "status");
+const empData = buildStackedCounts(filtered, "employee");
+// Numbers tables (no symbols)
+  renderBreakdownNumbers("byShopNumbers", shopData);
+    renderBreakdownNumbers("byStatusNumbers", statusData);
+  renderBreakdownNumbers("byEmployeeNumbers", empData);
+
+  // KPI tables
+  renderEmployeeKpiTable(empStats);
+  renderMonthlyTotalsTable(empStats);
+
+  // Entries tables (both tabs)
+  renderEntriesTableInto("rowsBodyEntry", filtered, true);
+  renderEntriesTableInto("rowsBodyTable", filtered, true);
+}
+
+/* ========= Init ========= */
+function init() {
+  // Ensure every task has id
+  tasks = tasks.map(t => ({...t, id: t.id || uuid()}));
+  persist();
+
+  // Entry selects
+  setOptions(document.getElementById("employeeSelect"), EMPLOYEES);
+  setOptions(document.getElementById("shopSelect"), SHOPS);
+  // Status (uses the list from Excel)
+  setOptions(document.getElementById("commentSelect"), COMMENTS);
+  // Show/hide detail input for Others/Effect
+  document.getElementById("commentSelect").addEventListener("change", (e)=>toggleEntryStatusDetail(e.target.value));
+  toggleEntryStatusDetail(document.getElementById("commentSelect").value);
+
+  // Filters
+  setOptions(document.getElementById("filterEmployee"), EMPLOYEES, "All employees");
+  setOptions(document.getElementById("filterShop"), SHOPS, "All shops");
+
+  // Default date
+  document.getElementById("dateInput").value = new Date().toISOString().slice(0,10);
+
+  // Tabs events
+  document.querySelectorAll("header .tabsbar .tabbtn").forEach(btn => {
+    btn.addEventListener("click", () => showTab(btn.dataset.tab));
+  });
+
+  // Entry events
+  document.getElementById("addBtn").addEventListener("click", addTask);
+  document.getElementById("taskInput").addEventListener("keydown", (e) => {
+    if(e.key === "Enter") {
+      e.preventDefault();
+      addTask();
+    }
+  });
+
+  // KPI sub tab events
+  document.querySelectorAll("#tab-kpi [data-subtab]").forEach(btn => {
+    btn.addEventListener("click", () => showKpiSubTab(btn.dataset.subtab));
+  });
+  showKpiSubTab("empkpi");
+
+  document.getElementById("clearBtn").addEventListener("click", clearFields);
+
+  // Filter events (shared)
+  ["filterEmployee","filterShop","filterYear","quickRange","searchInput","fromDate","toDate","sortBy"].forEach(id => {
+    document.getElementById(id).addEventListener("input", render);
+    document.getElementById(id).addEventListener("change", render);
+  });
+
+  // Files events
+  document.getElementById("exportBtn").addEventListener("click", exportExcel);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const f = e.target.files?.[0];
+    if(f) importExcel(f);
+    e.target.value = "";
+  });
+  document.getElementById("deleteAllBtn").addEventListener("click", () => {
+    if(confirm("Delete ALL local data on this device?")) {
+      tasks = [];
+      persist();
+      render();
+      toast("Deleted all");
+    }
+  });
+
+  render();
+  document.getElementById("taskInput").focus();
+}
+
+init();
+</script>
+</body>
+</html>
